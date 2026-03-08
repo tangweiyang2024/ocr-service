@@ -1,0 +1,410 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR Studio</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --paper: #fffdf8;
+      --panel: #ffffff;
+      --ink: #17212b;
+      --mute: #5f6b75;
+      --line: #d9d2c3;
+      --brand: #a23f1e;
+      --brand-2: #7f3118;
+      --ok-bg: #eef7f0;
+      --ok-tx: #1b5b32;
+      --err-bg: #fff2ef;
+      --err-tx: #9a2f1a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(1000px 420px at 10% -10%, #f9d8c8 0%, transparent 70%),
+        radial-gradient(900px 380px at 100% 0%, #e6ede9 0%, transparent 65%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 28px auto;
+      padding: 0 14px;
+      animation: fadeIn .35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .shell {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 20px 50px rgba(33, 23, 13, 0.12);
+    }
+
+    .top {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(120deg, #fce7dd 0%, #fffdf8 55%, #eef6f0 100%);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: .3px;
+      font-family: "Georgia", "Times New Roman", serif;
+      font-weight: 700;
+    }
+
+    .sub {
+      margin: 6px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      grid-template-columns: 360px 1fr;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .title {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--mute);
+    }
+
+    label { display: block; font-size: 13px; color: var(--mute); margin-bottom: 6px; }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-picker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px dashed #c7bca8;
+      border-radius: 12px;
+      padding: 12px;
+      background: linear-gradient(180deg, #fffefb, #f9f5eb);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color .2s ease, transform .12s ease;
+    }
+
+    .file-picker:hover {
+      border-color: #a23f1e;
+      transform: translateY(-1px);
+    }
+
+    .file-picker-main {
+      display: grid;
+      gap: 2px;
+    }
+
+    .file-picker-title {
+      font-size: 14px;
+      color: #2f3c48;
+      font-weight: 600;
+    }
+
+    .file-picker-hint {
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .file-chip {
+      border: 0;
+      border-radius: 999px;
+      background: #1f2a33;
+      color: #fff;
+      padding: 7px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px; }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      padding: 9px 14px;
+      font-size: 14px;
+      transition: transform .12s ease, background .2s ease;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    .btn-main { background: var(--brand); color: #fff; }
+    .btn-main:hover { background: var(--brand-2); }
+    .btn-ghost { background: #ece6db; color: #2e343a; }
+    .btn-ghost:hover { background: #e2dbc9; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+      color: #2b3947;
+      margin-bottom: 8px;
+    }
+
+    .status {
+      min-height: 42px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      margin-bottom: 10px;
+      background: #f5f4f1;
+      color: #3a4957;
+    }
+
+    .status.ok {
+      background: var(--ok-bg);
+      border-color: #cee7d4;
+      color: var(--ok-tx);
+    }
+
+    .status.err {
+      background: var(--err-bg);
+      border-color: #f1cfc7;
+      color: var(--err-tx);
+    }
+
+    .preview {
+      width: 100%;
+      max-height: 230px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px dashed var(--line);
+      background: #fcfbf8;
+      margin-bottom: 10px;
+    }
+
+    pre {
+      margin: 0;
+      min-height: 170px;
+      max-height: 320px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8f6f2;
+      color: #223446;
+      font-size: 12px;
+    }
+
+    .meta, .tips { font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="shell">
+      <header class="top">
+        <h1>OCR Studio</h1>
+        <p class="sub">上传图片后调用 <code>POST /api/recognize</code>，支持 <code>chi_sim</code> / <code>eng</code></p>
+      </header>
+
+      <div class="grid">
+        <div class="card">
+          <p class="title">输入参数</p>
+          <label for="file">图片文件</label>
+          <input id="file" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff" />
+          <label for="file" class="file-picker">
+            <span class="file-picker-main">
+              <span class="file-picker-title">点击上传图片</span>
+              <span class="file-picker-hint">支持 PNG/JPG/WEBP/BMP/TIFF，最大 8MB</span>
+            </span>
+            <span class="file-chip" id="fileName">未选择文件</span>
+          </label>
+
+          <label for="langPreset">语言预设</label>
+          <select id="langPreset">
+            <option value="chi_sim+eng" selected>中文 + 英文</option>
+            <option value="chi_sim">仅中文</option>
+            <option value="eng">仅英文</option>
+          </select>
+
+          <label for="lang">自定义 lang</label>
+          <input id="lang" type="text" value="chi_sim+eng" />
+
+          <label class="check"><input id="preprocess" type="checkbox" checked />启用预处理（推荐）</label>
+
+          <div class="row">
+            <button id="run" class="btn-main">开始识别</button>
+            <button id="copyText" class="btn-ghost" type="button">复制文本</button>
+            <button id="clear" class="btn-ghost" type="button">清空</button>
+          </div>
+
+          <p class="meta" id="stat">文件大小/耗时信息会在识别后显示</p>
+        </div>
+
+        <div class="card">
+          <p class="title">识别结果</p>
+          <div id="status" class="status">等待上传并识别</div>
+          <img id="preview" class="preview" alt="图片预览" />
+
+          <label for="textResult">文本结果</label>
+          <textarea id="textResult" placeholder="识别文本将显示在这里"></textarea>
+
+          <label for="jsonResult">JSON 响应</label>
+          <pre id="jsonResult">{}</pre>
+
+          <p class="tips">上传上限 8MB；健康检查：<code>/health</code></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const fileEl = document.getElementById("file");
+    const langPresetEl = document.getElementById("langPreset");
+    const langEl = document.getElementById("lang");
+    const preprocessEl = document.getElementById("preprocess");
+    const runEl = document.getElementById("run");
+    const copyTextEl = document.getElementById("copyText");
+    const clearEl = document.getElementById("clear");
+    const previewEl = document.getElementById("preview");
+    const textResultEl = document.getElementById("textResult");
+    const jsonResultEl = document.getElementById("jsonResult");
+    const statusEl = document.getElementById("status");
+    const statEl = document.getElementById("stat");
+    const fileNameEl = document.getElementById("fileName");
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function updatePreview(file) {
+      if (!file) {
+        previewEl.removeAttribute("src");
+        previewEl.style.display = "none";
+        fileNameEl.textContent = "未选择文件";
+        return;
+      }
+      fileNameEl.textContent = file.name.length > 24 ? file.name.slice(0, 21) + "..." : file.name;
+      const url = URL.createObjectURL(file);
+      previewEl.src = url;
+      previewEl.style.display = "block";
+      previewEl.onload = () => URL.revokeObjectURL(url);
+    }
+
+    async function run() {
+      const file = fileEl.files && fileEl.files[0];
+      if (!file) {
+        setStatus("请先选择图片文件", "err");
+        return;
+      }
+
+      const start = Date.now();
+      runEl.disabled = true;
+      setStatus("识别中，请稍候...", "");
+      textResultEl.value = "";
+      jsonResultEl.textContent = "{}";
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("lang", (langEl.value || "chi_sim+eng").trim());
+      form.append("preprocess", preprocessEl.checked ? "true" : "false");
+
+      try {
+        const res = await fetch("/api/recognize", { method: "POST", body: form });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setStatus("识别失败: " + (data.detail || "unknown error"), "err");
+          jsonResultEl.textContent = JSON.stringify(data, null, 2);
+          return;
+        }
+
+        const ms = Date.now() - start;
+        setStatus("识别完成", "ok");
+        textResultEl.value = data.text || "";
+        jsonResultEl.textContent = JSON.stringify(data, null, 2);
+        statEl.textContent = `文件: ${file.name} | 大小: ${Math.round(file.size / 1024)} KB | 耗时: ${ms} ms | 行数: ${data.line_count}`;
+      } catch (e) {
+        setStatus("请求失败: " + e, "err");
+      } finally {
+        runEl.disabled = false;
+      }
+    }
+
+    async function copyText() {
+      if (!textResultEl.value) {
+        setStatus("没有可复制内容", "err");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(textResultEl.value);
+        setStatus("文本已复制", "ok");
+      } catch (e) {
+        setStatus("复制失败: " + e, "err");
+      }
+    }
+
+    function clearAll() {
+      fileEl.value = "";
+      langPresetEl.value = "chi_sim+eng";
+      langEl.value = "chi_sim+eng";
+      preprocessEl.checked = true;
+      textResultEl.value = "";
+      jsonResultEl.textContent = "{}";
+      statEl.textContent = "文件大小/耗时信息会在识别后显示";
+      setStatus("等待上传并识别", "");
+      updatePreview(null);
+    }
+
+    fileEl.addEventListener("change", () => updatePreview(fileEl.files && fileEl.files[0]));
+    langPresetEl.addEventListener("change", () => { langEl.value = langPresetEl.value; });
+    runEl.addEventListener("click", run);
+    copyTextEl.addEventListener("click", copyText);
+    clearEl.addEventListener("click", clearAll);
+    previewEl.style.display = "none";
+  </script>
+</body>
+</html>

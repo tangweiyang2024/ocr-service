@@ -1,0 +1,27 @@
+[Unit]
+Description=OCR API (FastAPI + Tesseract)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ocr-service
+Environment=PYTHONUNBUFFERED=1
+Environment=OCR_MAX_UPLOAD_BYTES=8388608
+Environment=OCR_MAX_IMAGE_PIXELS=16000000
+Environment=OCR_MAX_CONCURRENCY=2
+Environment=OCR_TIMEOUT_SECONDS=25
+Environment=OCR_QUEUE_WAIT_SECONDS=4
+Environment=OCR_MAX_SIDE=2200
+Environment=OMP_THREAD_LIMIT=1
+Environment=OMP_NUM_THREADS=1
+ExecStart=/opt/ocr-service/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 18000 --workers 1 --no-access-log
+Restart=always
+RestartSec=2
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

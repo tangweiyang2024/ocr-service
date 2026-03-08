@@ -1,98 +1,69 @@
-﻿# OCR API (FastAPI + Tesseract)
+# OCR Service (FastAPI + Tesseract + MCP)
 
-一个可部署到远端服务器的 OCR 识别服务，提供 HTTP 接口和网页界面。
+一个支持 HTTP API、Web 页面和 MCP 协议的 OCR 服务。
+
+线上地址：
+- 前端页面：`http://api.cstwy.top/`
+- API：`http://api.cstwy.top/api/recognize`
+- MCP：`http://api.cstwy.top/mcp`
 
 ## 功能
-
-- `GET /`：OCR 网页界面
+- `GET /`：OCR 前端页面
 - `GET /health`：健康检查
-- `POST /api/recognize`：图片 OCR 识别（兼容 `POST /ocr/recognize`）
-- 支持中英文识别（默认 `chi_sim+eng`）
-- 支持简单图像预处理（灰度、锐化、对比度增强）
+- `POST /api/recognize`：上传图片识别（兼容 `/ocr/recognize`）
+- MCP 工具：`ocr_health`、`ocr_recognize_file`、`ocr_recognize_base64`
 
-## 接口说明
+默认准确率优先参数：
+- `lang=chi_sim+eng`
+- `preprocess=true`
+- `psm=6`
 
-### 1) 健康检查
+## 快速开始
 
+### 1) 本地运行 HTTP API
 ```bash
-curl http://<SERVER_IP>:8000/health
-```
-
-示例返回：
-
-```json
-{"status":"ok"}
-```
-
-### 2) OCR 识别
-
-请求：`multipart/form-data`
-
-- `file`：图片文件（必填）
-- `lang`：OCR 语言（可选，默认 `chi_sim+eng`）
-- `preprocess`：是否预处理（可选，默认 `true`）
-
-```bash
-curl -X POST "http://<SERVER_IP>:8000/api/recognize" \
-  -F "file=@./demo.png" \
-  -F "lang=chi_sim+eng" \
-  -F "preprocess=true"
-```
-
-示例返回：
-
-```json
-{
-  "filename": "demo.png",
-  "lang": "chi_sim+eng",
-  "text": "识别出的全文...",
-  "lines": ["第1行", "第2行"],
-  "line_count": 2
-}
-```
-
-## 本地运行
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-> 注意：本地非 Docker 运行时，需要先安装 Tesseract 引擎及语言包。
-
-## Docker 运行（推荐）
-
-### 方式一：Docker
-
+### 2) 本地运行 MCP（stdio）
 ```bash
-docker build -t ocr-api:latest .
-docker run -d --name ocr-api -p 127.0.0.1:18000:8000 --restart unless-stopped ocr-api:latest
+pip install -r requirements-mcp.txt
+python app/mcp_server.py
 ```
 
-### 方式二：Docker Compose
-
+### 3) API 调用示例
 ```bash
-docker compose -f deploy/docker-compose.yml up -d --build
+curl -X POST "http://api.cstwy.top/api/recognize" \
+  -F "file=@test2.png" \
+  -F "lang=chi_sim+eng" \
+  -F "preprocess=true" \
+  -F "psm=6"
 ```
 
-## 远端服务器部署步骤（Ubuntu 示例）
+## 文档目录
+- 架构：[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- 使用：[`docs/USAGE.md`](docs/USAGE.md)
+- 部署（物理机）：[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- Skills 说明：[`docs/SKILLS.md`](docs/SKILLS.md)
+- Claude OCR skill 原文：[`docs/skills/claude-ocr-skill.md`](docs/skills/claude-ocr-skill.md)
+- Codex OCR skill 原文：[`docs/skills/codex-ocr-skill.md`](docs/skills/codex-ocr-skill.md)
 
-1. 安装 Docker / Docker Compose
-2. 上传代码到服务器（`git clone` 或 `scp`）
-3. 进入项目目录执行：
+## 部署文件
+- Nginx：`deploy/api.cstwy.top.conf`
+- OCR API systemd：`deploy/ocr-api.service`
+- OCR MCP systemd：`deploy/ocr-mcp.service`
+- Docker Compose（可选）：`deploy/docker-compose.yml`
 
-```bash
-docker compose -f deploy/docker-compose.yml up -d --build
-```
+## 关键环境变量
+- `OCR_API_BASE`：MCP 转调 API 地址（默认 `http://api.cstwy.top`）
+- `OCR_MCP_NAME`：MCP 服务名（默认 `ocr-service`）
+- `OCR_MCP_TRANSPORT`：`stdio` 或 `streamable-http`
+- `OCR_MCP_HOST`：MCP 监听地址（默认 `127.0.0.1`）
+- `OCR_MCP_PORT`：MCP 端口（默认 `19000`）
+- `OCR_MCP_PATH`：MCP 路径（默认 `/mcp`）
+- `OCR_MAX_UPLOAD_BYTES`：上传大小限制（默认 8MB）
 
-4. Nginx 反向代理 `127.0.0.1:18000`，建议路径前缀 `/ocr/`
-5. 访问 `https://<DOMAIN>/ocr/` 使用网页，`https://<DOMAIN>/ocr/docs` 查看 Swagger
-
-## 生产建议
-
-- 在前面加 Nginx 反向代理，并启用 HTTPS
-- 增加接口鉴权（API Key / JWT）
-- 限制上传大小与并发，防止滥用
-- 记录请求日志和错误日志
+## 注意事项
+- 客户端本地图片路径通常对远端 MCP 不可见，优先走 `ocr_recognize_base64`。
+- 请勿上传敏感图片到公网服务。

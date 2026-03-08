@@ -3,3 +3,5 @@ __pycache__/
 .venv/
 .env
 *.tgz
+.venv-mcp-client/
+tmp_*.py

@@ -1,0 +1,25 @@
+[Unit]
+Description=OCR MCP Server
+After=network.target ocr-api.service
+Requires=ocr-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ocr-service
+Environment=PYTHONUNBUFFERED=1
+Environment=OCR_API_BASE=http://api.cstwy.top
+Environment=OCR_MCP_NAME=ocr-service
+Environment=OCR_MCP_TRANSPORT=streamable-http
+Environment=OCR_MCP_HOST=0.0.0.0
+Environment=OCR_MCP_PORT=19000
+Environment=OCR_MCP_PATH=/mcp
+ExecStart=/opt/ocr-service/.venv-mcp/bin/python /opt/ocr-service/app/mcp_server.py
+Restart=always
+RestartSec=2
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

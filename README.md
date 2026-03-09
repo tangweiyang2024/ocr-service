@@ -45,6 +45,7 @@ curl -X POST "http://api.cstwy.top/api/recognize" \
 - 架构：[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - 使用：[`docs/USAGE.md`](docs/USAGE.md)
 - 部署（物理机）：[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- MCP 客户端接入与验证：[`docs/MCP_CLIENT_SETUP.md`](docs/MCP_CLIENT_SETUP.md)
 - Skills 说明：[`docs/SKILLS.md`](docs/SKILLS.md)
 - Claude OCR skill 原文：[`docs/skills/claude-ocr-skill.md`](docs/skills/claude-ocr-skill.md)
 - Codex OCR skill 原文：[`docs/skills/codex-ocr-skill.md`](docs/skills/codex-ocr-skill.md)

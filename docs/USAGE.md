@@ -43,3 +43,9 @@ MCP URL：`http://api.cstwy.top/mcp`
 - `/ocr test2.png`
 
 说明：实际是否走 file/base64 由 skill 内部流程决定。
+
+## 五、MCP 安装与验证
+
+完整的 Codex / Claude Code MCP 接入步骤与验证流程见：
+
+- [`docs/MCP_CLIENT_SETUP.md`](MCP_CLIENT_SETUP.md)
